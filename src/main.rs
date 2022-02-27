@@ -29,7 +29,9 @@ pub enum RpiError {
 
 fn main() -> Result<(), Box<dyn Error>> {
     loop {
-        let brightness = match read_backlight_from_file() {
+        let mut backlight = RpiBacklight::new(PATH_TO_BACKLIGHT);
+
+        let brightness = match backlight.read_backlight_from_file() {
             Ok(value) => value,
             Err(error) => match error {
                 // Soon will be available in a new version of rust (currently on nightly only https://github.com/rust-lang/rust/issues/86442)
@@ -60,28 +62,38 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
-fn read_backlight_from_file() -> Result<u8, RpiError> {
-    let mut backlight_value = String::new();
+pub struct RpiBacklight {
+    path: &'static str,
+}
 
-    let _file = File::open(PATH_TO_BACKLIGHT); // .read_to_string(&mut backlight_value)
+impl RpiBacklight {
+    pub fn new(path: &'static str) -> Self {
+        Self { path }
+    }
 
-    let _file: Result<_, RpiError> = match _file {
-        Ok(mut handle) => match handle.read_to_string(&mut backlight_value) {
-            Ok(_) => Ok(()),
-            Err(_) => return Err(RpiError::ReadError),
-        },
-        Err(error) => match error.kind() {
-            ErrorKind::NotFound => return Err(RpiError::FileMissing),
-            ErrorKind::PermissionDenied => return Err(RpiError::MissingPermissions),
-            // See line 39
-            //ErrorKind::ResourceBusy => return Err(RpiError::FileBusy),
-            _ => return Err(RpiError::FileError),
-        },
-    };
+    fn read_backlight_from_file(&mut self) -> Result<u8, RpiError> {
+        let mut backlight_value = String::new();
 
-    let result = backlight_value
-        .parse::<u8>()
-        .map_err(|_| RpiError::ParseError)?;
+        let _file = File::open(self.path); // .read_to_string(&mut backlight_value)
 
-    Ok(result)
+        let _file: Result<_, RpiError> = match _file {
+            Ok(mut handle) => match handle.read_to_string(&mut backlight_value) {
+                Ok(_) => Ok(()),
+                Err(_) => return Err(RpiError::ReadError),
+            },
+            Err(error) => match error.kind() {
+                ErrorKind::NotFound => return Err(RpiError::FileMissing),
+                ErrorKind::PermissionDenied => return Err(RpiError::MissingPermissions),
+                // See line 39
+                //ErrorKind::ResourceBusy => return Err(RpiError::FileBusy),
+                _ => return Err(RpiError::FileError),
+            },
+        };
+
+        let result = backlight_value
+            .parse::<u8>()
+            .map_err(|_| RpiError::ParseError)?;
+
+        Ok(result)
+    }
 }
