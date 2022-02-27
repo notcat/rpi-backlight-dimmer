@@ -1,10 +1,6 @@
 use std::io::ErrorKind;
 use std::time::Duration;
-use std::{
-    error::Error,
-    fs::{self, File},
-    io::{self, Read},
-};
+use std::{error::Error, fs::File, io::Read};
 
 use thiserror::Error as ThisError;
 
@@ -67,9 +63,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn read_backlight_from_file() -> Result<u8, RpiError> {
     let mut backlight_value = String::new();
 
-    let file = File::open(PATH_TO_BACKLIGHT); // .read_to_string(&mut backlight_value)
+    let _file = File::open(PATH_TO_BACKLIGHT); // .read_to_string(&mut backlight_value)
 
-    let file: Result<_, RpiError> = match file {
+    let _file: Result<_, RpiError> = match _file {
         Ok(mut handle) => match handle.read_to_string(&mut backlight_value) {
             Ok(_) => Ok(()),
             Err(_) => return Err(RpiError::ReadError),
