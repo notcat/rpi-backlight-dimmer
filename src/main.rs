@@ -1,4 +1,6 @@
-use std::io::ErrorKind;
+use std::error;
+use std::io::{self, ErrorKind, Write};
+use std::str::Bytes;
 use std::time::Duration;
 use std::{error::Error, fs::File, io::Read};
 
@@ -57,7 +59,24 @@ fn main() -> Result<(), Box<dyn Error>> {
             },
         };
 
+        if let Err(error) = backlight.change_backlight_in_file(brightness + 5) {
+            match error {
+                RpiError::FileError | RpiError::FileMissing | RpiError::ParseError => {
+                    panic!("{}", error)
+                }
+                other => {
+                    dbg!("got minor error!: {}", other);
+                    dbg!("retrying in 3 seconds, (file could just be busy)");
+
+                    std::thread::sleep(Duration::from_secs(3));
+
+                    continue;
+                }
+            }
+        }
+
         dbg!(brightness);
+
         std::thread::sleep(Duration::from_secs(1));
     }
 }
@@ -72,28 +91,51 @@ impl RpiBacklight {
     }
 
     fn read_backlight_from_file(&mut self) -> Result<u8, RpiError> {
-        let mut backlight_value = String::new();
+        let mut backlight_string = String::new();
 
         let _file = File::open(self.path); // .read_to_string(&mut backlight_value)
 
         let _file: Result<_, RpiError> = match _file {
-            Ok(mut handle) => match handle.read_to_string(&mut backlight_value) {
+            Ok(mut handle) => match handle.read_to_string(&mut backlight_string) {
                 Ok(_) => Ok(()),
                 Err(_) => return Err(RpiError::ReadError),
             },
-            Err(error) => match error.kind() {
-                ErrorKind::NotFound => return Err(RpiError::FileMissing),
-                ErrorKind::PermissionDenied => return Err(RpiError::MissingPermissions),
-                // See line 39
-                //ErrorKind::ResourceBusy => return Err(RpiError::FileBusy),
-                _ => return Err(RpiError::FileError),
-            },
+            Err(error) => Err(Self::map_error(error)),
         };
 
-        let result = backlight_value
+        let result = backlight_string
             .parse::<u8>()
             .map_err(|_| RpiError::ParseError)?;
 
         Ok(result)
+    }
+
+    fn change_backlight_in_file(&mut self, value: u8) -> Result<(), RpiError> {
+        // let backlight_value = match self.read_backlight_from_file() {
+        //     Ok(value) => value,
+        //     Err(err) => return Err(err),
+        // };
+
+        let _file = File::options().write(true).open(self.path); // .read_to_string(&mut backlight_value)
+
+        match _file {
+            Ok(mut handle) => match handle.write_all(value.to_string().as_bytes()) {
+                Ok(_) => Ok(()),
+                Err(error) => Err(Self::map_error(error)),
+            },
+            Err(error) => Err(Self::map_error(error)),
+        }
+
+        // lerp (current value, future value, time)
+    }
+
+    fn map_error(error: io::Error) -> RpiError {
+        match error.kind() {
+            ErrorKind::NotFound => RpiError::FileMissing,
+            ErrorKind::PermissionDenied => RpiError::MissingPermissions,
+            // See line 39
+            //ErrorKind::ResourceBusy => return Err(RpiError::FileBusy),
+            _ => RpiError::FileError,
+        }
     }
 }
