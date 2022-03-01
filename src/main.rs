@@ -102,7 +102,7 @@ impl RpiBacklight {
     fn read_backlight_from_file(&mut self) -> Result<u8, RpiError> {
         let mut backlight_string = String::new();
 
-        let _file = File::open(self.path); // .read_to_string(&mut backlight_value)
+        let _file = File::open(self.path);
 
         let _file: Result<_, RpiError> = match _file {
             Ok(mut handle) => match handle.read_to_string(&mut backlight_string) {
