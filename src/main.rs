@@ -1,9 +1,11 @@
 use std::error;
+use std::f32::consts::PI;
 use std::io::{self, ErrorKind, Write};
 use std::str::Bytes;
 use std::time::Duration;
 use std::{error::Error, fs::File, io::Read};
 
+use chrono::{self, Local, Timelike};
 use thiserror::Error as ThisError;
 
 // steal specners structopt stuff and use that to fill out the PATH_TO_BACKLIGHT instead
@@ -49,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     panic!("{}", error)
                 }
                 other => {
-                    dbg!("got minor error!: {}", other);
+                    dbg!("got minor error!", other);
                     dbg!("retrying in 3 seconds, (file could just be busy)");
 
                     std::thread::sleep(Duration::from_secs(3));
@@ -75,6 +77,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
 
+        backlight.change_backlight_off_dayminute();
         dbg!(brightness);
 
         std::thread::sleep(Duration::from_secs(1));
@@ -83,6 +86,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 pub struct RpiBacklight {
     path: &'static str,
+}
+
+pub struct TimeStates {
+    sunrise: f32,
+    daytime: f32,
+    dusk: f32,
 }
 
 impl RpiBacklight {
@@ -127,6 +136,24 @@ impl RpiBacklight {
         }
 
         // lerp (current value, future value, time)
+    }
+
+    fn change_backlight_off_dayminute(&mut self) {
+        // chrono
+        // time of day in MINUTES
+        // convert minutes to 0-1 value
+        // pipe daytimevalue into y = -0.5cos(x)+0.5 (remove negative for dusk curve)
+        // x being the time
+
+        let minutes_zero_to_one =
+            ((Local::now().hour() * 60) + Local::now().minute()) as f32 / 1440.0;
+
+        let calculated_brightness = -0.5 * f32::cos(PI * minutes_zero_to_one) + 0.5;
+
+        //let timestates = TimeStates;
+
+        dbg!(calculated_brightness);
+        dbg!(minutes_zero_to_one);
     }
 
     fn map_error(error: io::Error) -> RpiError {
