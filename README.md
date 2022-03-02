@@ -5,7 +5,7 @@ You can express your desired brightness (0 to 1) for your local (affected by the
 
 Command options are:
 
-```
+```less
 -p, --path <path>
 -s, --sunrise <sunrise>  [ default: 0.0   ]
 -n, --noon <daytime>     [ default: 0.333 ]
