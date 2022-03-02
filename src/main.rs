@@ -8,11 +8,6 @@ use crate::backlight::{RpiBacklight, RpiError};
 use backlight::TimeStates;
 use structopt::StructOpt;
 
-// TODO: steal specners structopt stuff and use that to fill out the PATH_TO_BACKLIGHT instead
-// so you could just call ./rpi-backlight-dimmer --path /sys/class/backlight/rpi-backlight/brightness
-
-// "/sys/class/backlight/rpi_backlight/brightness";
-
 #[derive(Debug, StructOpt)]
 pub struct Opt {
     #[structopt(short, long)]

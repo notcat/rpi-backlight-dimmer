@@ -3,6 +3,8 @@ This project changes the backlight's brightness of your Raspberry Pi 7inch touch
 
 You can express your desired brightness (0 to 1) for your local (affected by the set time on your machine) sunrise, noon, and dark using the command parameters.
 
+The path argument is the path to your backlight file. On *all?* Raspberry Pi's, your path should be `/sys/class/backlight/rpi_backlight/brightness`
+
 Command options are:
 
 ```less
