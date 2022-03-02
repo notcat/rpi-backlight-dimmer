@@ -116,7 +116,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 other => {
                     dbg!("got minor error!: {}", other);
-                    dbg!("retrying in 3 seconds, (file could just be busy)");
+                    dbg!(
+                        "retrying in 3 seconds, (file could just be busy, or missing permissions)"
+                    );
 
                     std::thread::sleep(Duration::from_secs(3));
 
