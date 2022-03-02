@@ -24,3 +24,6 @@ target = "armv7-unknown-linux-gnueabihf"
 [target.armv7-unknown-linux-gnueabihf]
 linker = "<path to your linker here>"
 ```
+
+# Missing Permissions Error
+You might have to run the file as root, or as a user that has permissions to the file your path is set to.
