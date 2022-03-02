@@ -1,2 +1,4 @@
 /target
 brightness
+/.cargo*
+buildscript.ps1
